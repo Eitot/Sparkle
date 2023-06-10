@@ -61,15 +61,14 @@ static WKUserScript *_userScriptWithInjectedStyleSource(NSString *styleSource)
         _drawsWebViewBackground = YES;
         
         WKWebViewConfiguration *configuration = [[WKWebViewConfiguration alloc] init];
-        
-        // Note: this javaScriptEnabled property is deprecated in favor of another webpage preference property,
-        // that involves implementing a delegate method that is only available on macOS 11.. to get it properly working.
-        // To simplify things, just rely on deprecated property for now.
-        // Future reader: if you change how JS is disabled, please be sure to test that JS code is properly disabled in HTML release notes.
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-        configuration.preferences.javaScriptEnabled = javaScriptEnabled;
-#pragma clang diagnostic pop
+        if (@available(macOS 11, *)) {
+            configuration.defaultWebpagePreferences.allowsContentJavaScript = javaScriptEnabled;
+        }
+#if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_VERSION_11_0
+        else {
+            configuration.preferences.javaScriptEnabled = javaScriptEnabled;
+        }
+#endif
         configuration.preferences.javaScriptCanOpenWindowsAutomatically = NO;
         
         NSError *colorStyleContentsError = nil;
